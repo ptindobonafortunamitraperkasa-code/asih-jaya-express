@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ASIH JAYA EXPRESS</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
+    body{margin:0;background:#f3f6fb;color:#111827}
+    .app{display:flex;min-height:100vh}
+    .side{width:250px;background:#061527;color:white;padding:22px}
+    .logo{font-size:24px;font-weight:900;margin-bottom:6px}
+    .tag{font-size:12px;color:#8db7ff;margin-bottom:30px}
+    .menu button{width:100%;padding:13px;border:0;border-radius:12px;margin-bottom:10px;background:transparent;color:white;text-align:left;cursor:pointer}
+    .menu button.active,.menu button:hover{background:#1478ff}
+    .main{flex:1;padding:24px}
+    .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+    .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+    .card{background:white;border-radius:18px;padding:18px;box-shadow:0 4px 14px #0001}
+    .card h3{margin:0;font-size:14px;color:#6b7280}
+    .card b{font-size:34px}
+    .blue{border-left:6px solid #1478ff}.green{border-left:6px solid #22c55e}.yellow{border-left:6px solid #f59e0b}.red{border-left:6px solid #ef4444}
+    table{width:100%;border-collapse:collapse;background:white;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px #0001}
+    th,td{padding:14px;border-bottom:1px solid #e5e7eb;font-size:14px;text-align:left}
+    th{background:#f8fafc;color:#475569}
+    .status{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700}
+    .Disiapkan{background:#e0f2fe;color:#0369a1}
+    .Dalam{background:#fef3c7;color:#92400e}
+    .Diterima{background:#dcfce7;color:#166534}
+    .Kendala{background:#fee2e2;color:#991b1b}
+    input,select,textarea{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:12px;margin-bottom:12px}
+    label{font-size:13px;font-weight:700;color:#374151}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .box{background:white;padding:20px;border-radius:18px;box-shadow:0 4px 14px #0001}
+    .btn{background:#1478ff;color:white;border:0;padding:12px 18px;border-radius:12px;cursor:pointer;font-weight:700}
+    .btn2{background:#111827;color:white;border:0;padding:9px 12px;border-radius:10px;cursor:pointer}
+    .hide{display:none}
+    @media(max-width:800px){.app{display:block}.side{width:100%}.cards{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.main{padding:14px}table{font-size:12px}}
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="side">
+    <div class="logo">ASIH JAYA<br>EXPRESS</div>
+    <div class="tag">Pencatat & History Pengiriman</div>
+    <div class="menu">
+      <button class="active" onclick="showPage('dashboard',this)">Dashboard</button>
+      <button onclick="showPage('new',this)">Pengiriman Baru</button>
+      <button onclick="showPage('list',this)">Daftar Pengiriman</button>
+      <button onclick="showPage('report',this)">Laporan</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <h2 id="title">Dashboard</h2>
+      <button class="btn" onclick="loadData()">Refresh</button>
+    </div>
+
+    <section id="dashboard">
+      <div class="cards">
+        <div class="card blue"><h3>Total Pengiriman</h3><b id="total">0</b></div>
+        <div class="card yellow"><h3>Dalam Perjalanan</h3><b id="jalan">0</b></div>
+        <div class="card green"><h3>Sudah Diterima</h3><b id="diterima">0</b></div>
+        <div class="card red"><h3>Kendala</h3><b id="kendala">0</b></div>
+      </div>
+      <h3>Pengiriman Terbaru</h3>
+      <div id="latest"></div>
+    </section>
+
+    <section id="new" class="hide">
+      <div class="box">
+        <h3>Buat Pengiriman Baru</h3>
+        <div class="grid">
+          <div>
+            <label>No Surat Jalan</label>
+            <input id="no_surat_jalan" placeholder="SJ-250531-001">
+          </div>
+          <div>
+            <label>Tanggal Kirim</label>
+            <input id="tanggal_kirim" type="date">
+          </div>
+          <div>
+            <label>Tujuan / Cabang</label>
+            <input id="tujuan" placeholder="TOBA HELMET - Palangka Raya">
+          </div>
+          <div>
+            <label>Nama Supir</label>
+            <input id="nama_supir" placeholder="Nama supir">
+          </div>
+          <div>
+            <label>Plat Mobil</label>
+            <input id="plat_mobil" placeholder="KH 1234 XX">
+          </div>
+          <div>
+            <label>Status</label>
+            <select id="status">
+              <option>Disiapkan</option>
+              <option>Dalam Perjalanan</option>
+              <option>Diterima</option>
+              <option>Kendala</option>
+            </select>
+          </div>
+        </div>
+
+        <label>Barang Dikirim</label>
+        <textarea id="barang" rows="4" placeholder="Contoh: Helm XYZ J5 White 10 pcs"></textarea>
+
+        <label>Catatan</label>
+        <textarea id="catatan" rows="3" placeholder="Catatan tambahan"></textarea>
+
+        <button class="btn" onclick="saveShipment()">Simpan Pengiriman</button>
+      </div>
+    </section>
+
+    <section id="list" class="hide">
+      <h3>Daftar Pengiriman</h3>
+      <div id="table"></div>
+    </section>
+
+    <section id="report" class="hide">
+      <div class="box">
+        <h3>Laporan Singkat</h3>
+        <p>Total pengiriman, status perjalanan, diterima, dan kendala akan otomatis masuk dari data Supabase.</p>
+        <button class="btn" onclick="window.print()">Print / Simpan PDF</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://yeiluicpkkwjdphijrjo.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InllaWx1aWNwa2t3amRwaGlqcmpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMTY0MzMsImV4cCI6MjA5NTc5MjQzM30._ItR59o4cg_390tpG-Fuj7Go00wK21BJpuaLGR2to-0";
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  let shipments = [];
+
+  function showPage(id, btn){
+    document.querySelectorAll("section").forEach(s=>s.classList.add("hide"));
+    document.getElementById(id).classList.remove("hide");
+    document.querySelectorAll(".menu button").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("title").innerText = btn.innerText;
+    if(id==="list") renderTable();
+  }
+
+  async function saveShipment(){
+    const data = {
+      no_surat_jalan: document.getElementById("no_surat_jalan").value,
+      tanggal_kirim: document.getElementById("tanggal_kirim").value,
+      tujuan: document.getElementById("tujuan").value,
+      nama_supir: document.getElementById("nama_supir").value,
+      plat_mobil: document.getElementById("plat_mobil").value,
+      status: document.getElementById("status").value,
+      catatan: "Barang: " + document.getElementById("barang").value + "\\nCatatan: " + document.getElementById("catatan").value
+    };
+
+    if(!data.no_surat_jalan || !data.tanggal_kirim || !data.tujuan){
+      alert("No Surat Jalan, Tanggal, dan Tujuan wajib diisi.");
+      return;
+    }
+
+    const { error } = await sb.from("shipments").insert([data]);
+    if(error){
+      alert("Gagal simpan: " + error.message);
+    } else {
+      alert("Pengiriman berhasil disimpan.");
+      document.querySelectorAll("input,textarea").forEach(i=>i.value="");
+      loadData();
+    }
+  }
+
+  async function loadData(){
+    const { data, error } = await sb
+      .from("shipments")
+      .select("*")
+      .order("created_at",{ascending:false});
+
+    if(error){
+      alert("Gagal ambil data: " + error.message);
+      return;
+    }
+
+    shipments = data || [];
+    document.getElementById("total").innerText = shipments.length;
+    document.getElementById("jalan").innerText = shipments.filter(x=>x.status==="Dalam Perjalanan").length;
+    document.getElementById("diterima").innerText = shipments.filter(x=>x.status==="Diterima").length;
+    document.getElementById("kendala").innerText = shipments.filter(x=>x.status==="Kendala").length;
+
+    renderLatest();
+    renderTable();
+  }
+
+  function renderLatest(){
+    document.getElementById("latest").innerHTML = makeTable(shipments.slice(0,5));
+  }
+
+  function renderTable(){
+    document.getElementById("table").innerHTML = makeTable(shipments);
+  }
+
+  function makeTable(data){
+    if(data.length===0) return "<div class='box'>Belum ada data pengiriman.</div>";
+
+    return `
+      <table>
+        <thead>
+          <tr>
+            <th>No SJ</th>
+            <th>Tanggal</th>
+            <th>Tujuan</th>
+            <th>Supir</th>
+            <th>Plat</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map(x=>`
+            <tr>
+              <td>${x.no_surat_jalan}</td>
+              <td>${x.tanggal_kirim}</td>
+              <td>${x.tujuan}</td>
+              <td>${x.nama_supir || "-"}</td>
+              <td>${x.plat_mobil || "-"}</td>
+              <td><span class="status ${x.status.split(" ")[0]}">${x.status}</span></td>
+              <td>
+                <button class="btn2" onclick="changeStatus('${x.id}','Diterima')">Diterima</button>
+                <button class="btn2" onclick="changeStatus('${x.id}','Kendala')">Kendala</button>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  async function changeStatus(id,status){
+    const { error } = await sb.from("shipments").update({status}).eq("id",id);
+    if(error) alert("Gagal update: " + error.message);
+    else loadData();
+  }
+
+  loadData();
+</script>
+
+</body>
+</html>
